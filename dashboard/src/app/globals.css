@@ -1,0 +1,314 @@
+@import "tailwindcss";
+
+/* =============================================================================
+   DESIGN TOKENS - CSS Custom Properties
+   ============================================================================= */
+
+:root {
+  /* =========================================================================
+     DASHBOARD DESIGN TOKENS
+     ========================================================================= */
+
+  /* Dashboard Backgrounds */
+  --d-bg-page: #f5f5f7;
+  --d-bg-surface: #ffffff;
+  --d-bg-elevated: #ffffff;
+  --d-bg-subtle: #fbfbfd;
+  --d-bg-hover: #efefef;
+  --d-bg-active: #e8e8ed;
+  --d-bg-selected: rgba(0, 113, 227, 0.04);
+  --d-bg-selected-strong: rgba(0, 113, 227, 0.08);
+
+  /* Dashboard Text */
+  --d-text-primary: #1d1d1f;
+  --d-text-secondary: #636366;
+  --d-text-tertiary: #8e8e93;
+  --d-text-disabled: #aeaeb2;
+  --d-text-inverted: #ffffff;
+  --d-text-link: #0071e3;
+  --d-text-link-hover: #0066cc;
+
+  /* Dashboard Borders */
+  --d-border: #d2d2d7;
+  --d-border-subtle: #e8e8ed;
+  --d-border-strong: #aeaeb2;
+  --d-border-focus: #0071e3;
+  --d-border-selected: #0071e3;
+
+  /* Dashboard Interactive */
+  --d-primary: #0071e3;
+  --d-primary-hover: #0066cc;
+  --d-primary-active: #0055b3;
+  --d-secondary: #0071e3;
+  --d-secondary-hover: #f0f5ff;
+  --d-ghost-hover: #efefef;
+  --d-ghost-active: #e8e8ed;
+  --d-destructive: #ff453a;
+  --d-destructive-hover: #dc2626;
+  --d-destructive-bg: #fef2f2;
+
+  /* Dashboard Status */
+  --d-success: #30d158;
+  --d-success-bg: #f0fdf4;
+  --d-success-text: #1e7e34;
+  --d-error: #ff453a;
+  --d-error-bg: #fef2f2;
+  --d-error-text: #b91c1c;
+  --d-diff-added-word: #d1fae5;
+  --d-diff-removed-word: #fee2e2;
+  --d-warning: #ff9f0a;
+  --d-warning-bg: #fffbeb;
+  --d-warning-text: #b45309;
+  --d-info: #0071e3;
+  --d-info-bg: #f0f5ff;
+  --d-info-text: #0055b3;
+
+  /* Dashboard Component-Specific */
+  --d-sidebar-bg: #fbfbfd;
+  --d-sidebar-border: #d2d2d7;
+  --d-toolbar-bg: #fbfbfd;
+  --d-toolbar-border: #e8e8ed;
+  --d-tabs-inactive: #8e8e93;
+  --d-tabs-active: #0071e3;
+  --d-tabs-active-bg: rgba(0, 113, 227, 0.08);
+
+  /* Dashboard Shadows */
+  --d-shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.03);
+  --d-shadow-md: 0 2px 4px -1px rgb(0 0 0 / 0.06), 0 1px 2px -1px rgb(0 0 0 / 0.03);
+  --d-shadow-lg: 0 4px 6px -2px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.03);
+  --d-shadow-xl: 0 8px 16px -4px rgb(0 0 0 / 0.08), 0 4px 6px -2px rgb(0 0 0 / 0.03);
+  --d-shadow-dropdown: 0 4px 16px -2px rgb(0 0 0 / 0.12), 0 2px 4px -1px rgb(0 0 0 / 0.04);
+  --d-shadow-modal: 0 24px 48px -12px rgb(0 0 0 / 0.18), 0 12px 24px -6px rgb(0 0 0 / 0.06);
+  --d-shadow-sidebar: -4px 0 16px -4px rgb(0 0 0 / 0.08);
+}
+
+/* =============================================================================
+   TAILWIND v4 THEME EXTENSION
+   ============================================================================= */
+
+@theme {
+  /* Dashboard Colors */
+  --color-d-bg-page: var(--d-bg-page);
+  --color-d-bg-surface: var(--d-bg-surface);
+  --color-d-bg-hover: var(--d-bg-hover);
+  --color-d-bg-active: var(--d-bg-active);
+  --color-d-bg-selected: var(--d-bg-selected);
+
+  --color-d-text-primary: var(--d-text-primary);
+  --color-d-text-secondary: var(--d-text-secondary);
+  --color-d-text-tertiary: var(--d-text-tertiary);
+
+  --color-d-border: var(--d-border);
+  --color-d-border-subtle: var(--d-border-subtle);
+
+  --color-d-primary: var(--d-primary);
+  --color-d-primary-hover: var(--d-primary-hover);
+  --color-d-destructive: var(--d-destructive);
+
+  --color-d-success: var(--d-success);
+  --color-d-error: var(--d-error);
+  --color-d-warning: var(--d-warning);
+
+  /* Font Family */
+  --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+  --font-mono: "SF Mono", SFMono-Regular, ui-monospace, Menlo, Monaco, Consolas, monospace;
+
+  /* Border Radius */
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 12px;
+  --radius-2xl: 16px;
+  --radius-3xl: 20px;
+}
+
+/* =============================================================================
+   BASE STYLES
+   ============================================================================= */
+
+body {
+  background: var(--d-bg-page);
+  color: var(--d-text-primary);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Hide scrollbar for cleaner look */
+::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}
+
+/* Focus ring for accessibility */
+:focus-visible {
+  outline: 2px solid var(--d-border-focus);
+  outline-offset: 2px;
+}
+
+/* =============================================================================
+   DASHBOARD COMPONENT UTILITIES
+   ============================================================================= */
+
+/* Dashboard card style */
+.d-card {
+  background: var(--d-bg-surface);
+  border: 1px solid var(--d-border-subtle);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--d-shadow-sm);
+}
+
+/* Dashboard elevated surface */
+.d-elevated {
+  background: var(--d-bg-surface);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--d-shadow-dropdown);
+}
+
+/* Dashboard section header */
+.d-section-header {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--d-text-tertiary);
+}
+
+/* =============================================================================
+   ANIMATIONS
+   ============================================================================= */
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes fadeOut {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+@keyframes slideInRight {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+
+@keyframes slideOutRight {
+  from { transform: translateX(0); }
+  to { transform: translateX(100%); }
+}
+
+@keyframes slideInUp {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 150ms ease-out;
+}
+
+.animate-slide-in-right {
+  animation: slideInRight 200ms ease-out;
+}
+
+.animate-slide-in-up {
+  animation: slideInUp 250ms ease-out;
+}
+
+.animate-scale-in {
+  animation: scaleIn 150ms ease-out;
+}
+
+/* Shimmer animation for loading skeletons */
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.animate-shimmer {
+  animation: shimmer 1.5s infinite linear;
+}
+
+/* Carousel slide animations */
+@keyframes slideInFromRight {
+  from {
+    opacity: 0;
+    transform: translateX(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideInFromLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Staggered entrance animation for timeline cards */
+@keyframes fadeSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* =============================================================================
+   VAJRA — PIPELINE GRAPH
+   ============================================================================= */
+
+/* Animated dash flow on active edges */
+@keyframes vajraDashFlow {
+  to {
+    stroke-dashoffset: -20;
+  }
+}
+
+.vajra-edge-animated .react-flow__edge-path {
+  animation: vajraDashFlow 1s linear infinite;
+}
+
+/* Hide React Flow default background dots/grid */
+.vajra-pipeline .react-flow__background {
+  display: none;
+}
+
+/* Clean up React Flow chrome */
+.vajra-pipeline .react-flow__controls,
+.vajra-pipeline .react-flow__minimap,
+.vajra-pipeline .react-flow__attribution {
+  display: none;
+}
+
+/* Softer selection/hover on nodes */
+.vajra-pipeline .react-flow__node:focus {
+  outline: none;
+}
+
+.vajra-pipeline .react-flow__node:focus-visible {
+  outline: 2px solid var(--d-border-focus);
+  outline-offset: 2px;
+  border-radius: var(--radius-xl);
+}

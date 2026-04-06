@@ -1,0 +1,35 @@
+digraph KnowledgePipeline {
+  graph [goal="Draft, review, and ship a category knowledge document as a PR"]
+
+  start [shape=Mdiamond]
+  exit  [shape=Msquare]
+
+  write_knowledge [
+    type="agent",
+    label="Write Knowledge",
+    agent="knowledge-writer",
+    artifact_path=".vajra/run/knowledge-draft.md"
+  ]
+
+  review_knowledge [
+    type="agent",
+    label="Review Knowledge",
+    agent="knowledge-reviewer",
+    artifact_path=".vajra/run/knowledge-draft.md"
+  ]
+
+  prepare_pr [
+    type="agent",
+    label="Prepare PR",
+    agent="knowledge-pr-preparer",
+    artifact_path=".vajra/run/pr-body.md"
+  ]
+
+  publish_pr [
+    type="tool",
+    label="Publish PR",
+    command="vajra publish-pr --title-file .vajra/pr-title.txt --body-file .vajra/run/pr-body.md --base {{ target_branch }}"
+  ]
+
+  start -> write_knowledge -> review_knowledge -> prepare_pr -> publish_pr -> exit
+}

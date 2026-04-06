@@ -1,0 +1,28 @@
+digraph RevisionPipeline {
+  graph [goal="Address GitHub PR review feedback and update the existing pull request"]
+
+  start [shape=Mdiamond]
+  exit  [shape=Msquare]
+
+  revise [
+    type="agent",
+    label="Revise",
+    agent="reviser",
+    artifact_path=".vajra/run/revision-summary.md"
+  ]
+
+  update_pr [
+    type="agent",
+    label="Prepare PR Update",
+    agent="revision-pr-preparer",
+    artifact_path=".vajra/run/pr-body.md"
+  ]
+
+  publish_pr_update [
+    type="tool",
+    label="Update PR",
+    command="vajra update-pr --title-file .vajra/pr-title.txt --body-file .vajra/run/pr-body.md"
+  ]
+
+  start -> revise -> update_pr -> publish_pr_update -> exit
+}

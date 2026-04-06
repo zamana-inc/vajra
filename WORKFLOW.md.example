@@ -1,0 +1,208 @@
+---
+# =============================================================================
+# VAJRA WORKFLOW CONFIGURATION
+# =============================================================================
+# Copy this file to WORKFLOW.md and fill in your values.
+# Environment variables (e.g. $LINEAR_API_KEY) are resolved at startup.
+# =============================================================================
+
+# --- Tracker (Linear) --------------------------------------------------------
+tracker:
+  kind: linear
+  api_key: $LINEAR_API_KEY
+  assignee_id: "your-linear-user-id"   # See README step 2 for how to find this
+  active_states:
+    - Todo
+    - In Progress
+  terminal_states:
+    - Done
+    - Canceled
+    - Cancelled
+    - Duplicate
+
+# --- Polling ------------------------------------------------------------------
+polling:
+  interval_ms: 30000                   # Check Linear every 30 seconds
+
+# --- Workspace ----------------------------------------------------------------
+workspace:
+  root: /tmp/vajra-workspaces          # Where Vajra clones repos and runs agents
+
+# --- Hooks --------------------------------------------------------------------
+# Hooks run inside the workspace directory.
+# Available env vars: VAJRA_BASE_BRANCH, VAJRA_TARGET_BRANCH, VAJRA_MERGE_STRATEGY
+hooks:
+  after_create: |
+    git clone --depth 1 --branch ${VAJRA_BASE_BRANCH:-main} https://github.com/your-org/your-repo.git .
+  before_run: |
+    git fetch origin ${VAJRA_BASE_BRANCH:-main}
+    git checkout ${VAJRA_BASE_BRANCH:-main}
+    git reset --hard origin/${VAJRA_BASE_BRANCH:-main}
+    git clean -fd -e .vajra
+  timeout_ms: 120000
+
+# --- Execution ----------------------------------------------------------------
+execution:
+  max_concurrent_agents: 5
+  max_retry_attempts: 3
+  max_retry_backoff_ms: 300000
+  max_agent_invocations_per_run: 20
+
+# --- Escalation ---------------------------------------------------------------
+escalation:
+  linear_state: Needs Human Review     # State to move issues to when escalated
+  comment: true                        # Post an escalation comment on the issue
+  slack_notify: true                   # Notify Slack on escalation
+
+# --- Triage -------------------------------------------------------------------
+# Optional — when enabled, an LLM picks the workflow, branch, and merge strategy.
+# When disabled, workflow routing is purely label-based.
+# triage:
+#   enabled: true
+#   backend: claude
+#   model: claude-sonnet-4-6
+#   timeout_ms: 30000
+
+# --- Workflows ----------------------------------------------------------------
+# The default workflow handles most issues. Additional workflows (revision,
+# document, knowledge) require extra agent definitions — see docs/configuration.md
+# for the full list of agents each workflow needs.
+workflows:
+  default:
+    dot_file: pipelines/default.dot
+    success_state: "In Review"
+    inspect_pr: true
+
+workflow_routing:
+  default_workflow: default
+  by_label: {}
+
+# --- Backends -----------------------------------------------------------------
+# Command templates for running coding agents.
+# Available template vars: {{ model }}, {{ prompt }}, {{ reasoning_effort }}
+backends:
+  claude:
+    command: "claude --model {{ model }} -p {{ prompt | shellquote }}"
+  codex:
+    command: "codex exec --model {{ model }} {{ prompt | shellquote }}"
+
+# --- Agents -------------------------------------------------------------------
+# Each agent maps to a pipeline stage. Names must match the `agent` attribute
+# in the DOT graph nodes.
+#
+# The default pipeline (pipelines/default.dot) requires these 6 agents:
+#   planner, plan-reviewer, coder, code-reviewer, fixer, pr-preparer
+agents:
+  planner:
+    backend: claude
+    model: claude-sonnet-4-6
+    prompt: |
+      Use the `vajra-plan` skill.
+
+      Issue: {{ issue.identifier }} — {{ issue.title }}
+      {{ issue.description }}
+
+      If `.vajra/run/plan.md` already exists, revise it instead of starting over.
+      If `.vajra/run/plan-review.md` exists, address that review directly.
+
+      Write: .vajra/run/plan.md
+    skills:
+      - vajra-plan
+
+  plan-reviewer:
+    backend: claude
+    model: claude-sonnet-4-6
+    prompt: |
+      Use the `vajra-plan-review` skill.
+
+      Issue: {{ issue.identifier }} — {{ issue.title }}
+      {{ issue.description }}
+
+      Read: .vajra/run/plan.md
+      Write: .vajra/run/plan-review.md
+      Write structured review outcome: .vajra/run/stages/{{ stage.id }}/result.json
+      Allowed labels: lgtm, revise, escalate
+    skills:
+      - vajra-plan-review
+
+  coder:
+    backend: claude
+    model: claude-sonnet-4-6
+    prompt: |
+      Use the `vajra-implement` skill.
+
+      Issue: {{ issue.identifier }} — {{ issue.title }}
+      {{ issue.description }}
+
+      Read: .vajra/run/plan.md
+      If `.vajra/run/code-review.md` exists, address that review while keeping the implementation scoped.
+      Write: .vajra/run/implementation-summary.md
+    skills:
+      - vajra-implement
+
+  code-reviewer:
+    backend: claude
+    model: claude-sonnet-4-6
+    prompt: |
+      Use the `vajra-code-review` skill.
+
+      Issue: {{ issue.identifier }} — {{ issue.title }}
+      {{ issue.description }}
+
+      Read: .vajra/run/plan.md, .vajra/run/implementation-summary.md
+      Inspect: the actual code changes (git diff, changed files)
+      Write: .vajra/run/code-review.md
+      Write structured review outcome: .vajra/run/stages/{{ stage.id }}/result.json
+      Allowed labels: lgtm, revise, escalate
+    skills:
+      - vajra-code-review
+
+  fixer:
+    backend: claude
+    model: claude-sonnet-4-6
+    prompt: |
+      Use the `vajra-fix` skill.
+
+      Issue: {{ issue.identifier }} — {{ issue.title }}
+      {{ issue.description }}
+
+      Read: .vajra/run/code-review.md, .vajra/run/implementation-summary.md
+      Update: .vajra/run/implementation-summary.md
+    skills:
+      - vajra-fix
+
+  pr-preparer:
+    backend: claude
+    model: claude-sonnet-4-6
+    prompt: |
+      Use the `vajra-prepare-pr` skill.
+
+      Issue: {{ issue.identifier }} — {{ issue.title }}
+      {{ issue.description }}
+
+      Read: .vajra/run/plan.md, .vajra/run/implementation-summary.md, .vajra/run/code-review.md
+      Write: .vajra/pr-title.txt, .vajra/run/pr-body.md
+      Branch: vajra/{{ issue.identifier | downcase }}
+      Target: origin/{{ target_branch }}
+      Do not create or update the PR directly. The workflow's publish_pr tool step owns GitHub mutation.
+    skills:
+      - vajra-prepare-pr
+
+# --- GitHub -------------------------------------------------------------------
+github:
+  repository: "your-org/your-repo"
+  api_key: $GITHUB_TOKEN
+  webhook_secret: $GITHUB_WEBHOOK_SECRET   # optional — for PR review loop
+  revision_label: "vajra-revision"
+  revision_command: "/vajra revise"
+  revision_state: "In Progress"
+  merged_state: "Done"
+  closed_state: "Todo"              # State when PR is closed without merging
+
+# --- Slack (optional) ---------------------------------------------------------
+# slack:
+#   bot_token: $SLACK_BOT_TOKEN
+#   channel_id: "your-channel-id"
+#   notify_on_success: true
+#   notify_on_failure: true
+---

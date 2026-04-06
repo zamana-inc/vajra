@@ -1,0 +1,36 @@
+{
+  "name": "vajra",
+  "description": "Background coding agent that polls Linear for issues, routes them through configurable workflows, and produces pull requests",
+  "private": true,
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/zamana-inc/vajra.git"
+  },
+  "author": "Zamana Inc.",
+  "license": "MIT",
+  "keywords": [
+    "coding-agent",
+    "linear",
+    "github",
+    "pull-request",
+    "workflow",
+    "automation",
+    "ai",
+    "llm"
+  ],
+  "workspaces": [
+    "orchestrator",
+    "dashboard"
+  ],
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "scripts": {
+    "dev:orchestrator": "node orchestrator/dist/index.js",
+    "dev:dashboard": "cd dashboard && npm run dev",
+    "build:orchestrator": "cd orchestrator && npm run build",
+    "build:dashboard": "cd dashboard && npm run build",
+    "build": "npm run build:orchestrator && npm run build:dashboard",
+    "test": "cd orchestrator && npm test"
+  }
+}

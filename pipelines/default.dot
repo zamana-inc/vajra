@@ -1,0 +1,75 @@
+digraph DefaultPipeline {
+  graph [goal="Plan, implement, test, and ship a Linear ticket as a PR"]
+
+  start [shape=Mdiamond]
+  exit  [shape=Msquare]
+  escalate [shape=Msquare, exit_reason="human_review"]
+
+  plan [
+    type="agent",
+    label="Plan",
+    agent="planner",
+    thread="planning",
+    max_visits="4",
+    on_exhaustion="escalate",
+    artifact_path=".vajra/run/plan.md"
+  ]
+
+  review_plan [
+    type="agent",
+    label="Review Plan",
+    agent="plan-reviewer",
+    artifact_path=".vajra/run/plan-review.md"
+  ]
+
+  code [
+    type="agent",
+    label="Code",
+    agent="coder",
+    thread="coding",
+    artifact_path=".vajra/run/implementation-summary.md"
+  ]
+
+  review_code [
+    type="agent",
+    label="Review Code",
+    agent="code-reviewer",
+    artifact_path=".vajra/run/code-review.md"
+  ]
+
+  fix_code [
+    type="agent",
+    label="Fix Code",
+    agent="fixer",
+    thread="coding",
+    max_visits="4",
+    on_exhaustion="escalate",
+    artifact_path=".vajra/run/implementation-summary.md"
+  ]
+
+  prepare_pr [
+    type="agent",
+    label="Prepare PR",
+    agent="pr-preparer",
+    artifact_path=".vajra/run/pr-body.md"
+  ]
+
+  publish_pr [
+    type="tool",
+    label="Publish PR",
+    command="vajra publish-pr --title-file .vajra/pr-title.txt --body-file .vajra/run/pr-body.md --base {{ target_branch }}"
+  ]
+
+  start -> plan
+  plan -> review_plan
+  review_plan -> code [on_label="lgtm"]
+  review_plan -> plan [on_label="revise"]
+  review_plan -> escalate [on_label="escalate"]
+  code -> review_code
+  review_code -> prepare_pr [on_label="lgtm"]
+  review_code -> fix_code [on_label="revise"]
+  review_code -> escalate [on_label="escalate"]
+  fix_code -> review_code
+  prepare_pr -> publish_pr
+  publish_pr -> exit
+}

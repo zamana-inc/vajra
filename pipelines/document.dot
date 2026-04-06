@@ -1,0 +1,22 @@
+digraph DocumentPipeline {
+  graph [goal="Write and review developer documentation for a Linear ticket"]
+
+  start [shape=Mdiamond]
+  exit  [shape=Msquare]
+
+  write_docs [
+    type="agent",
+    label="Write Docs",
+    agent="documenter",
+    artifact_path=".vajra/run/docs-draft.md"
+  ]
+
+  review_docs [
+    type="agent",
+    label="Review Docs",
+    agent="doc-reviewer",
+    artifact_path=".vajra/run/docs-draft.md"
+  ]
+
+  start -> write_docs -> review_docs -> exit
+}
